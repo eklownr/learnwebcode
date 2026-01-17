@@ -1,5 +1,6 @@
 const exptess = require("express");
 const app = exptess();
+const db = require("better-sqlite3")("ourApp.db")
 
 app.set("view engine", "ejs");
 app.use(exptess.urlencoded({ extended: true }));
@@ -45,6 +46,8 @@ app.post("/register", (req, res) => {
 
   // save new user to the database
   res.send("Thank you for filling out the form.");
+
+  // log the user by giving them a cookie
 
 });
 
