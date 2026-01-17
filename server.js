@@ -1,6 +1,22 @@
+const bcrypt = require("bcrypt")
 const exptess = require("express");
 const app = exptess();
-const db = require("better-sqlite3")("ourApp.db")
+const db = require("better-sqlite3")("ourApp.db");
+db.pragma("journal_mode = WAL");
+
+// setup database
+const createTables = db.transaction(() => {
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
+    )
+    `).run();
+});
+
+createTables();
+// end setup database
 
 app.set("view engine", "ejs");
 app.use(exptess.urlencoded({ extended: true }));
@@ -45,6 +61,12 @@ app.post("/register", (req, res) => {
   }
 
   // save new user to the database
+  const salt = bcrypt.genSaltSync(10);
+  pass = bcrypt.hashSync(pass, salt); // encrypt password
+  
+  const insertUser = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+  insertUser.run(user, pass);
+
   res.send("Thank you for filling out the form.");
 
   // log the user by giving them a cookie
