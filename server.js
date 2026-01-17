@@ -63,13 +63,19 @@ app.post("/register", (req, res) => {
   // save new user to the database
   const salt = bcrypt.genSaltSync(10);
   pass = bcrypt.hashSync(pass, salt); // encrypt password
-  
+
   const insertUser = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)");
   insertUser.run(user, pass);
 
-  res.send("Thank you for filling out the form.");
-
   // log the user by giving them a cookie
+  res.cookie("simpleApp", "secretvalue", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 1000 * 60 * 60 * 24    
+  });
+
+  res.send("Thank you for filling out the form.");
 
 });
 
