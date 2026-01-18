@@ -1,4 +1,6 @@
-const bcrypt = require("bcrypt")
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const exptess = require("express");
 const app = exptess();
 const db = require("better-sqlite3")("ourApp.db");
@@ -65,7 +67,17 @@ app.post("/register", (req, res) => {
   pass = bcrypt.hashSync(pass, salt); // encrypt password
 
   const insertUser = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-  insertUser.run(user, pass);
+  const result = insertUser.run(user, pass);
+
+  // get user id, name, pass
+  const lookupStatment = db.prepare("SELECT * FROM users WHERE ROWID = ?");
+  const ourUser = lookupStatment.get(result.lastInsertRowid);
+
+  const tokenValue = jwt.sign({
+    exp: 1, 
+    userid: ourUser.id, 
+    username: ourUser.username}, 
+    process.env.JWTSECRETS);
 
   // log the user by giving them a cookie
   res.cookie("simpleApp", "secretvalue", {
