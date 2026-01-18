@@ -1,6 +1,7 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser")
 const exptess = require("express");
 const app = exptess();
 const db = require("better-sqlite3")("ourApp.db");
@@ -21,11 +22,23 @@ createTables();
 // end setup database
 
 app.set("view engine", "ejs");
-app.use(exptess.urlencoded({ extended: true }));
+app.use(exptess.urlencoded({ extended: false }));
 app.use(exptess.static("public"));
+app.use(cookieParser());
 
 app.use(function (req, res, next) {
   res.locals.errors = [];
+
+  // try to decode incoming cookie
+  try {
+    const decoded = jwt.verify(req.cookies.simpleApp, process.env.JWTSECRETS);
+    req.user = decoded;
+  } catch(err) {
+    req.user = false;
+  }
+  res.locals.user = req.user;
+  console.log(req.user);
+
   next();
 })
 
@@ -47,7 +60,7 @@ app.post("/register", (req, res) => {
   if (typeof user !== "string") user = "";
   if (typeof pass !== "string") pass = "";
 
-  user = req.body.username.trim();
+  user = user.trim();
 
   if (!user) errors.push("Please provide a username.");
   if (user && user.length < 3) errors.push("Username is to short must be at least 3 characters")
@@ -76,7 +89,7 @@ app.post("/register", (req, res) => {
 
   //set cookie value
   const tokenValue = jwt.sign({
-    exp: 1, 
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, 
     userid: ourUser.id, 
     username: ourUser.username}, 
     process.env.JWTSECRETS);
