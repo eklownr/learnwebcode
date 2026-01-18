@@ -58,9 +58,10 @@ app.post("/register", (req, res) => {
   if (pass && pass.length < 8) errors.push("Password is to short must be at least 8 characters")
   if (pass && pass.length > 70) errors.push("Password cannot exceed 70 characters")
 
+  // if any errors show homepage and errors
   if (errors.length) {
-    return res.render("homepage", { errors });
-  }
+    return res.render("homepage", { errors }); }
+  // else
 
   // save new user to the database
   const salt = bcrypt.genSaltSync(10);
@@ -69,10 +70,11 @@ app.post("/register", (req, res) => {
   const insertUser = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)");
   const result = insertUser.run(user, pass);
 
-  // get user id, name, pass
+  // lookup user id, name, pass
   const lookupStatment = db.prepare("SELECT * FROM users WHERE ROWID = ?");
   const ourUser = lookupStatment.get(result.lastInsertRowid);
 
+  //set cookie value
   const tokenValue = jwt.sign({
     exp: 1, 
     userid: ourUser.id, 
@@ -80,7 +82,7 @@ app.post("/register", (req, res) => {
     process.env.JWTSECRETS);
 
   // log the user by giving them a cookie
-  res.cookie("simpleApp", "secretvalue", {
+  res.cookie("simpleApp", tokenValue, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",
