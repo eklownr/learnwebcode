@@ -47,11 +47,21 @@ app.use(function (req, res, next) {
 });
 
 app.get("/", (req, res) => {
+	if (req.user) return res.render("dashboard");
 	res.render("homepage");
 });
 
 app.get("/login", (req, res) => {
 	res.render("login");
+});
+
+app.get("/logout", (req, res) => {
+	res.clearCookie("simpleApp");
+	res.redirect("/");
+});
+
+app.get("/create-post", (req, res) => {
+	res.render("dashboard");
 });
 
 app.post("/register", (req, res) => {
